@@ -5,11 +5,11 @@ from scipy.integrate import simps
 
 def main():
     illuminant_file = 'd65.csv'
-    spectra_name = 'absorptionSpectra_beta_carotene.txt'
+    spectra_name = 'cresol_red.txt'
 
     illuminant = np.loadtxt('illuminant/'+illuminant_file, delimiter=',')
     spectra = np.loadtxt('spectra/'+spectra_name, delimiter='\t')
-    density = 9*10e-5
+    density = 1*10e-5
 
     print('Illuminant: ', illuminant_file)
     print('Molecule: ', spectra_name)
@@ -39,7 +39,8 @@ def XYZ_to_sRGB(XYZ):
         else:
             RGB[i] = 12.92 * RGB[i]
         if RGB[i] < 0:
-            RGB[i] = 0.0
+            RGB[i] = 0
+            print("\nWARNING: out of gamu")
 
     return RGB
 
@@ -50,20 +51,24 @@ def XYZ(illuminant, spectra, density):
     d65_data = illuminant[:, 1]  # relative spectral power distribution
 
     # SPECTRAL DATA
-    l_spectra = spectra[:, 0]           # wavelenghts of spectra data
+    l_spectra_data = spectra[:, 0]           # wavelenghts of spectra data
     absorption_spectra_data = spectra[:, 1]  # absorption coefficients
 
     # Slice array to have same size
     # Find wavelenghts domain
-    l_max = min(l_data.max(), l_spectra.max())
-    l_min = max(l_data.min(), l_spectra.min())
+    l_max = min(l_data.max(), l_spectra_data.max())
+    l_min = max(l_data.min(), l_spectra_data.min())
     # Create a boolean mask to slice arrays
     mask_illuminant = (l_data >= l_min) & (l_data <= l_max)
-    mask_spectra = (l_spectra >= l_min) & (l_spectra <= l_max)
+    mask_spectra = (l_spectra_data >= l_min) & (l_spectra_data <= l_max)
     # Slice arrays of illuminant and spectra
     d65 = d65_data[mask_illuminant]
     l = l_data[mask_illuminant]
     absorption_spectra = absorption_spectra_data[mask_spectra]
+    l_spectra = l_spectra_data[mask_spectra]
+
+    # interpolate array to match values
+    absorption_spectra = np.interp(l,l_spectra,absorption_spectra)
 
     # calculation of color matching functions
     xyz = xyz_functions(l)
