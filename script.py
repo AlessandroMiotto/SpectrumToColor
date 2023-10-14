@@ -5,24 +5,24 @@ from scipy.integrate import simps
 
 def main():
     illuminant_file = 'd65.csv'
-    spectra_name = 'alizarin.txt'
+    spectra_name = 'chlorophyll_b.txt'
 
     illuminant = np.loadtxt('illuminant/'+illuminant_file, delimiter=',')
     spectra = np.loadtxt('spectra/'+spectra_name, delimiter='\t')
     spectra_normalization(spectra)
 
-    print('Illuminant: ', illuminant_file)
-    print('Molecule: ', spectra_name)
+    #print('Illuminant: ', illuminant_file)
+    #print('Molecule: ', spectra_name)
 
     # computing max density
     density = 1.0 * gamut_edge(illuminant, spectra)
-    print('Fictious density: ', density)
+    #print('Fictious density: ', density)
 
-    XYZ_val = XYZ(illuminant, spectra, density)
-    RGB_val = XYZ_to_sRGB(XYZ_val)
+    #XYZ_val = XYZ(illuminant, spectra, density)
+    #RGB_val = XYZ_to_sRGB(XYZ_val)
 
-    print("\nXYZ: ", XYZ_val)
-    print("RGB: ", RGB_val*255)
+    #print("\nXYZ: ", XYZ_val)
+    #print("RGB: ", RGB_val*255)
 
     
 # ---------------------------------------------------------------------------------
@@ -129,6 +129,7 @@ def gamut_edge(illuminant, spectra):
         density += 10.0
         XYZ_val = XYZ(illuminant, spectra, density)
         RGB_val = XYZ_to_sRGB(XYZ_val)
+        print(str(RGB_val[0]*255)+'\t'+str(RGB_val[1]*255)+'\t'+str(RGB_val[2]*255)+'\n')
         if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
             break
 
