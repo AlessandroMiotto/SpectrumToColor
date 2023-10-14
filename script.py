@@ -5,15 +5,17 @@ from scipy.integrate import simps
 
 def main():
     illuminant_file = 'd65.csv'
-    spectra_name = 'chlorophyll_b.txt'
+    spectra_name = 'alizarin.txt'
 
     illuminant = np.loadtxt('illuminant/'+illuminant_file, delimiter=',')
     spectra = np.loadtxt('spectra/'+spectra_name, delimiter='\t')
     spectra_normalization(spectra)
-    density = 1500
 
     print('Illuminant: ', illuminant_file)
     print('Molecule: ', spectra_name)
+
+    # computing max density
+    density = 1.0 * gamut_edge(illuminant, spectra)
     print('Fictious density: ', density)
 
     XYZ_val = XYZ(illuminant, spectra, density)
@@ -39,9 +41,11 @@ def XYZ_to_sRGB(XYZ):
             RGB[i] = 1.055 * RGB[i]**(1/2.4) - 0.055
         else:
             RGB[i] = 12.92 * RGB[i]
+
         if RGB[i] < 0:
             RGB[i] = 0
-            print("\nWARNING: out of gamu")
+        if RGB[i] > 1:
+            RGB[i] = 1
 
     return RGB
 
@@ -117,6 +121,18 @@ def spectra_normalization(spectra):
     mask = (spectra[:,0] >= 300) & (spectra[:,0] <= 830)
     norm = simps(spectra[:,1][mask])
     spectra[:,1] = spectra[:,1] / norm
+
+
+def gamut_edge(illuminant, spectra):
+    density = 0.0
+    while True:
+        density += 10.0
+        XYZ_val = XYZ(illuminant, spectra, density)
+        RGB_val = XYZ_to_sRGB(XYZ_val)
+        if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
+            break
+
+    return density
 
 
 if __name__ == "__main__":
