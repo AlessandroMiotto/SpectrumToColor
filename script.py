@@ -4,26 +4,29 @@ from scipy.integrate import simps
 
 
 def main():
-    illuminant_file = 'd65.csv'
-    spectra_name = 'chlorophyll_b.txt'
+    illuminant_file = 'd65'
+    spectra_name = 'nile_blue'
 
-    illuminant = np.loadtxt('illuminant/'+illuminant_file, delimiter=',')
-    spectra = np.loadtxt('spectra/'+spectra_name, delimiter='\t')
+    illuminant = np.loadtxt('illuminant/'+illuminant_file+'.csv', delimiter=',')
+    spectra = np.loadtxt('spectra/'+spectra_name+'.txt', delimiter='\t')
     spectra_normalization(spectra)
 
-    #print('Illuminant: ', illuminant_file)
-    #print('Molecule: ', spectra_name)
+    density = 0.0
+    colors = np.empty(shape=[0,3], dtype=int)
 
-    # computing max density
-    density = 1.0 * gamut_edge(illuminant, spectra)
-    #print('Fictious density: ', density)
+    while True:
+        XYZ_val = XYZ(illuminant, spectra, density)
+        RGB_val = XYZ_to_sRGB(XYZ_val)
+        density += 40.0
+        if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
+            break
+        colors = np.append(colors, [[int(RGB_val[0]*255), int(RGB_val[1]*255), int(RGB_val[2]*255)]], axis=0)
 
-    #XYZ_val = XYZ(illuminant, spectra, density)
-    #RGB_val = XYZ_to_sRGB(XYZ_val)
-
-    #print("\nXYZ: ", XYZ_val)
-    #print("RGB: ", RGB_val*255)
-
+    colors = np.array(colors)[np.newaxis, :, :]
+    plt.imshow(colors,aspect='auto')
+    plt.axis('off')
+    plt.title(spectra_name)
+    plt.savefig(spectra_name+'.png',dpi=300,bbox_inches='tight')
     
 # ---------------------------------------------------------------------------------
 
@@ -121,20 +124,6 @@ def spectra_normalization(spectra):
     mask = (spectra[:,0] >= 300) & (spectra[:,0] <= 830)
     norm = simps(spectra[:,1][mask])
     spectra[:,1] = spectra[:,1] / norm
-
-
-def gamut_edge(illuminant, spectra):
-    density = 0.0
-    while True:
-        density += 10.0
-        XYZ_val = XYZ(illuminant, spectra, density)
-        RGB_val = XYZ_to_sRGB(XYZ_val)
-        print(str(RGB_val[0]*255)+'\t'+str(RGB_val[1]*255)+'\t'+str(RGB_val[2]*255)+'\n')
-        if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
-            break
-
-    return density
-
 
 if __name__ == "__main__":
     main()
