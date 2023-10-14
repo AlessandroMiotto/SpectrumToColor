@@ -5,17 +5,18 @@ from scipy.integrate import simps
 
 def main():
     illuminant_file = 'd65.csv'
-    spectra_name = 'cresol_red.txt'
+    spectra_name = 'chlorophyll_b.txt'
 
     illuminant = np.loadtxt('illuminant/'+illuminant_file, delimiter=',')
     spectra = np.loadtxt('spectra/'+spectra_name, delimiter='\t')
-    density = 1*10e-5
+    spectra_normalization(spectra)
+    density = 1500
 
     print('Illuminant: ', illuminant_file)
     print('Molecule: ', spectra_name)
     print('Fictious density: ', density)
 
-    XYZ_val = XYZ(illuminant,spectra,density)
+    XYZ_val = XYZ(illuminant, spectra, density)
     RGB_val = XYZ_to_sRGB(XYZ_val)
 
     print("\nXYZ: ", XYZ_val)
@@ -110,6 +111,13 @@ def xyz_functions(l):
     xyz = np.array([x, y, z])
 
     return xyz
+
+# Rough normalization of spectral data
+def spectra_normalization(spectra):
+    mask = (spectra[:,0] >= 300) & (spectra[:,0] <= 830)
+    norm = simps(spectra[:,1][mask])
+    spectra[:,1] = spectra[:,1] / norm
+
 
 if __name__ == "__main__":
     main()
