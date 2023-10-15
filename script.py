@@ -5,7 +5,7 @@ from scipy.integrate import simps
 
 def main():
     illuminant_file = 'd65'
-    spectra_name = 'nile_blue'
+    spectra_name = 'nile_red'
 
     illuminant = np.loadtxt('illuminant/'+illuminant_file+'.csv', delimiter=',')
     spectra = np.loadtxt('spectra/'+spectra_name+'.txt', delimiter='\t')
@@ -17,7 +17,7 @@ def main():
     while True:
         XYZ_val = XYZ(illuminant, spectra, density)
         RGB_val = XYZ_to_sRGB(XYZ_val)
-        density += 40.0
+        density += 200.0
         if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
             break
         colors = np.append(colors, [[int(RGB_val[0]*255), int(RGB_val[1]*255), int(RGB_val[2]*255)]], axis=0)
