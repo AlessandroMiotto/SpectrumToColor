@@ -4,37 +4,59 @@ from scipy.integrate import simps
 
 
 def main():
+    # name of spectral data and illimninant
     illuminant_file = 'd65'
-    spectra_name = 'nile_red'
+    spectra_name = 'chlorophyll_b'
 
+    # acquiring data and normalize spectra
+    try:
+        spectra = np.loadtxt('spectra/'+spectra_name+'.txt', delimiter='\t')
+    except:
+        print('ERROR: '+spectra_name+'.txt not found')
+        return
     illuminant = np.loadtxt('illuminant/'+illuminant_file+'.csv', delimiter=',')
-    spectra = np.loadtxt('spectra/'+spectra_name+'.txt', delimiter='\t')
     spectra_normalization(spectra)
 
+    print('Analyzed absorption spectrum: '+spectra_name)
+    print('Illuminant: '+illuminant_file)
+    
+    # computing the max val of density
     density = 0.0
-    colors = np.empty(shape=[0,3], dtype=int)
-
     while True:
-        XYZ_val = XYZ(illuminant, spectra, density)
-        RGB_val = XYZ_to_sRGB(XYZ_val)
-        density += 800.0
+        RGB_val = XYZ_to_sRGB(XYZ(illuminant, spectra, density))
+        density += 10.0
+        # break if color exit sRGB value
         if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
             break
-        colors = np.append(colors, [[int(RGB_val[0]*255), int(RGB_val[1]*255), int(RGB_val[2]*255)]], axis=0)
+    
+    print(f'\nMax value of fictitious density: {density} au\n')
 
+    # creating an array of N RGB colors
+    N = 20
+    colors = np.zeros((N,3),dtype=int)
+    for i in range(N):
+        RGB_val = XYZ_to_sRGB(XYZ(illuminant, spectra, i*density/N))*255
+        colors[i,0]=RGB_val[0]
+        colors[i,1]=RGB_val[1]
+        colors[i,2]=RGB_val[2]
+
+    print(f'sRGB gamut edge color: ({colors[N-1,0]}, {colors[N-1,1]}, {colors[N-1,2]})')
+    print(f'{N} colors will be printed on colors/'+spectra_name+'.png file')
+
+    # print to png all colors
     plt.imshow([colors],aspect='auto')
     plt.axis('off')
     plt.title(spectra_name)
-    plt.savefig('colors/'+spectra_name+'.png',dpi=300,bbox_inches='tight')
-    
+    plt.savefig('colors/'+spectra_name+'.png',dpi=300,bbox_inches='tight') 
+
 # ---------------------------------------------------------------------------------
 
 # transform XYZ to sRGB color space with D65 illuminant
 # http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 def XYZ_to_sRGB(XYZ):
-    matrix = np.array([[3.2404542, -1.5371385, -0.4985314],
+    matrix = np.array([[ 3.2404542, -1.5371385, -0.4985314],
                        [-0.9692660,  1.8760108,  0.0415560],
-                       [0.0556434, -0.2040259, 1.0572252]])
+                       [ 0.0556434, -0.2040259,  1.0572252]])
 
     RGB = np.matmul(matrix, XYZ)
 
