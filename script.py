@@ -17,16 +17,15 @@ def main():
     while True:
         XYZ_val = XYZ(illuminant, spectra, density)
         RGB_val = XYZ_to_sRGB(XYZ_val)
-        density += 200.0
+        density += 800.0
         if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
             break
         colors = np.append(colors, [[int(RGB_val[0]*255), int(RGB_val[1]*255), int(RGB_val[2]*255)]], axis=0)
 
-    colors = np.array(colors)[np.newaxis, :, :]
-    plt.imshow(colors,aspect='auto')
+    plt.imshow([colors],aspect='auto')
     plt.axis('off')
     plt.title(spectra_name)
-    plt.savefig(spectra_name+'.png',dpi=300,bbox_inches='tight')
+    plt.savefig('colors/'+spectra_name+'.png',dpi=300,bbox_inches='tight')
     
 # ---------------------------------------------------------------------------------
 
