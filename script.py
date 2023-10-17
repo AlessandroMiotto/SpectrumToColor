@@ -6,7 +6,7 @@ from scipy.integrate import simps
 def main():
     # name of spectral data and illimninant
     illuminant_file = 'd65'
-    spectra_name = 'chlorophyll_b'
+    spectra_name = 'alizarin'
 
     # acquiring data and normalize spectra
     try:
@@ -25,6 +25,7 @@ def main():
     while True:
         RGB_val = XYZ_to_sRGB(XYZ(illuminant, spectra, density))
         density += 10.0
+        print(f'{density}\t{RGB_val}')
         # break if color exit sRGB value
         if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
             break
@@ -108,9 +109,9 @@ def XYZ(illuminant, spectra, density):
     N = simps(d65*y) # normalization constant
 
     # XYZ integrals (transmissive case)
-    X = np.trapz(np.exp(-absorption_spectra*density)*d65*x)/N
-    Y = np.trapz(np.exp(-absorption_spectra*density)*d65*y)/N
-    Z = np.trapz(np.exp(-absorption_spectra*density)*d65*z)/N
+    X = simps(np.exp(-absorption_spectra*density)*d65*x)/N
+    Y = simps(np.exp(-absorption_spectra*density)*d65*y)/N
+    Z = simps(np.exp(-absorption_spectra*density)*d65*z)/N
 
     XYZ = np.array([X,Y,Z])
 
