@@ -6,15 +6,10 @@ from scipy.integrate import simps
 def main():
     # name of spectral data and illimninant
     illuminant_file = 'd65'
-    spectra_name = 'alizarin'
+    spectra_name = 'alizari'
 
-    # acquiring data and normalize spectra
-    try:
-        spectra = np.loadtxt('spectra/'+spectra_name+'.txt', delimiter='\t')
-    except:
-        print('ERROR: '+spectra_name+'.txt not found')
-        return
-    illuminant = np.loadtxt('illuminant/'+illuminant_file+'.csv', delimiter=',')
+    # load of spectral and illuminant data
+    illuminant, spectra = load_file(illuminant_file, spectra_name)
     spectra_normalization(spectra)
 
     print('Analyzed absorption spectrum: '+spectra_name)
@@ -25,9 +20,8 @@ def main():
     while True:
         RGB_val = XYZ_to_sRGB(XYZ(illuminant, spectra, density))
         density += 10.0
-        print(f'{density}\t{RGB_val}')
         # break if color exit sRGB value
-        if RGB_val[0] == 0 or RGB_val[1] == 0 or RGB_val[2] == 0:
+        if RGB_val[0] < 10e-3 or RGB_val[1] < 10e-3 or RGB_val[2] < 10e-3:
             break
     
     print(f'\nMax value of fictitious density: {density} au\n')
@@ -83,6 +77,11 @@ def XYZ(illuminant, spectra, density):
     # SPECTRAL DATA
     l_spectra_data = spectra[:, 0]           # wavelenghts of spectra data
     absorption_spectra_data = spectra[:, 1]  # absorption coefficients
+
+    # verify the correct order of array
+    if(l_spectra_data[0] > l_spectra_data[1]):
+        absorption_spectra_data = np.flip(absorption_spectra_data)
+        l_spectra_data = np.flip(l_spectra_data)
 
     # Slice array to have same size
     # Find wavelenghts domain
@@ -146,6 +145,22 @@ def spectra_normalization(spectra):
     mask = (spectra[:,0] >= 300) & (spectra[:,0] <= 830)
     norm = simps(spectra[:,1][mask])
     spectra[:,1] = spectra[:,1] / norm
+
+# Load data to file
+def load_file(illuminant_name, spectra_name):
+    try:
+        spectra = np.loadtxt('spectra/'+spectra_name+'.txt', delimiter='\t')
+    except:
+        print('ERROR: '+spectra_name+'.txt spectra not found')
+        exit()
+
+    try:
+        illuminant = np.loadtxt('illuminant/'+illuminant_name+'.csv', delimiter=',')
+    except:
+        print('ERROR: '+illuminant_name+'.txt illuminant not found')
+        exit()
+
+    return illuminant, spectra
 
 if __name__ == "__main__":
     main()
